@@ -43,18 +43,18 @@
 		component: './TodoList',
 	},
 	{
-		name: 'TH01',
-		path: '/th01',
+		name: 'TH02',
+		path: '/th02',
 		icon: 'FolderOutlined',
 		routes: [
 			{
-				path: '/th01/bai-1',
+				path: '/th02/bai-1',
 				name: 'Bài 1',
 				icon: 'PlayCircleOutlined',
 				component: './Bai1',
 			},
 			{
-				path: '/th01/bai-2',
+				path: '/th02/bai-2',
 				name: 'Bài 2',
 				icon: 'BookOutlined',
 				component: './Bai2',
@@ -62,20 +62,7 @@
 		],
 	},
 
-	// DANH MUC HE THONG
-	// {
-	// 	name: 'DanhMuc',
-	// 	path: '/danh-muc',
-	// 	icon: 'copy',
-	// 	routes: [
-	// 		{
-	// 			name: 'ChucVu',
-	// 			path: 'chuc-vu',
-	// 			component: './DanhMuc/ChucVu',
-	// 		},
-	// 	],
-	// },
-
+	
 	{
 		path: '/notification',
 		routes: [

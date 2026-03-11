@@ -1,338 +1,198 @@
-import { PageContainer } from '@ant-design/pro-layout';
-import React, { useState, useEffect } from 'react';
-import { Tabs, Button, Table, Modal, Form, Input, InputNumber, Select, DatePicker, message, Space, Progress } from 'antd';
-import moment from 'moment';
+import React, { useState } from 'react';
+import { Menu, Layout, Form, Input, Button, Table, Select, message, Space, Card, InputNumber } from 'antd';
 
-const { TabPane } = Tabs;
-const { Option } = Select;
-
-const generateId = () => Math.random().toString(36).substr(2, 9);
-
-interface Subject {
-    id: string;
-    name: string;
-}
-
-interface StudySession {
-    id: string;
-    subjectId: string;
-    date: string; // YYYY-MM-DD HH:mm
-    duration: number; // so phut
-    content: string;
-    note: string;
-}
-
-interface Goal {
-    id: string;
-    subjectId: string; // 'all' hoac subjectId
-    month: string; // YYYY-MM
-    targetDuration: number; // so phut
-}
+const { Header, Content } = Layout;
 
 const Bai2: React.FC = () => {
-    const [subjects, setSubjects] = useState<Subject[]>([]);
-    const [sessions, setSessions] = useState<StudySession[]>([]);
-    const [goals, setGoals] = useState<Goal[]>([]);
+    const [currentMenu, setCurrentMenu] = useState('1');
 
-    // load du lieu tu localstorage
-    useEffect(() => {
-        const savedSubjects = localStorage.getItem('bai2_subjects');
-        const savedSessions = localStorage.getItem('bai2_sessions');
-        const savedGoals = localStorage.getItem('bai2_goals');
+    const [blocks, setBlocks] = useState<any[]>([]);
+    const [subjects, setSubjects] = useState<any[]>([]);
+    const [questions, setQuestions] = useState<any[]>([]);
+    const [structures, setStructures] = useState<any[]>([]);
+    const [exams, setExams] = useState<any[]>([]);
 
-        if (savedSubjects) {
-            setSubjects(JSON.parse(savedSubjects));
-        } else {
-            setSubjects([
-                { id: '1', name: 'Toán' },
-                { id: '2', name: 'Văn' },
-                { id: '3', name: 'Anh' },
-                { id: '4', name: 'Khoa học' },
-                { id: '5', name: 'Công nghệ' },
-            ]);
+    const [formBlock] = Form.useForm();
+    const [formSubj] = Form.useForm();
+    const [formQues] = Form.useForm();
+    const [formStruct] = Form.useForm();
+
+    const [examSubjId, setExamSubjId] = useState<string>();
+    const [filterSubj, setFilterSubj] = useState<string>();
+    const [filterBlock, setFilterBlock] = useState<string>();
+    const [filterDiff, setFilterDiff] = useState<string>();
+
+    const onAddBlock = (val: any) => {
+        setBlocks([...blocks, { id: Date.now().toString(), name: val.name }]);
+        formBlock.resetFields();
+    };
+
+    const onAddSubj = (val: any) => {
+        setSubjects([...subjects, { id: val.id, name: val.name, credits: val.credits }]);
+        formSubj.resetFields();
+    };
+
+    const onAddQues = (val: any) => {
+        setQuestions([...questions, { id: val.id, subjectId: val.subjectId, blockId: val.blockId, diff: val.diff, content: val.content }]);
+        formQues.resetFields();
+    };
+
+    const onAddStruct = (val: any) => {
+        setStructures([...structures, { blockId: val.blockId, diff: val.diff, count: val.count }]);
+        formStruct.resetFields();
+    };
+
+    const generateExam = () => {
+        if (!examSubjId) return message.error('Vui lòng chọn môn học');
+        let examQs: any[] = [];
+        for (let s of structures) {
+            let match = questions.filter(q => q.subjectId === examSubjId && q.blockId === s.blockId && q.diff === s.diff);
+            if (match.length < s.count) return message.error('Không đủ câu hỏi trong ngân hàng cho cấu trúc hiện tại');
+            examQs.push(...match.sort(() => 0.5 - Math.random()).slice(0, s.count));
         }
-
-        if (savedSessions) setSessions(JSON.parse(savedSessions));
-        if (savedGoals) setGoals(JSON.parse(savedGoals));
-    }, []);
-
-    // luu du lieu vao localstorage
-    useEffect(() => {
-        if (subjects.length > 0) localStorage.setItem('bai2_subjects', JSON.stringify(subjects));
-    }, [subjects]);
-
-    useEffect(() => {
-        localStorage.setItem('bai2_sessions', JSON.stringify(sessions));
-    }, [sessions]);
-
-    useEffect(() => {
-        localStorage.setItem('bai2_goals', JSON.stringify(goals));
-    }, [goals]);
-
-    // state quan ly modal
-    const [isSubjectModalVisible, setIsSubjectModalVisible] = useState(false);
-    const [isSessionModalVisible, setIsSessionModalVisible] = useState(false);
-    const [isGoalModalVisible, setIsGoalModalVisible] = useState(false);
-
-    const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
-    const [editingSession, setEditingSession] = useState<StudySession | null>(null);
-    const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
-
-    const [subjectForm] = Form.useForm();
-    const [sessionForm] = Form.useForm();
-    const [goalForm] = Form.useForm();
-
-    // ----- mon hoc -----
-    const openSubjectModal = (record?: Subject) => {
-        setEditingSubject(record || null);
-        if (record) {
-            subjectForm.setFieldsValue(record);
-        } else {
-            subjectForm.resetFields();
-        }
-        setIsSubjectModalVisible(true);
+        setExams([...exams, { id: Date.now(), subjectId: examSubjId, qs: examQs }]);
+        setStructures([]);
+        message.success('Tạo đề thi thành công');
     };
 
-    const handleSubjectSave = (values: any) => {
-        if (editingSubject) {
-            setSubjects(subjects.map(s => s.id === editingSubject.id ? { ...s, name: values.name } : s));
-            message.success('Cập nhật môn học thành công');
-        } else {
-            setSubjects([...subjects, { id: generateId(), name: values.name }]);
-            message.success('Thêm môn học thành công');
-        }
-        setIsSubjectModalVisible(false);
-    };
-
-    const deleteSubject = (id: string) => {
-        setSubjects(subjects.filter(s => s.id !== id));
-        message.success('Đã xóa môn học');
-    };
-
-    const subjectColumns = [
-        { title: 'Tên môn học', dataIndex: 'name', key: 'name' },
-        {
-            title: 'Hành động', key: 'action', render: (_: any, record: Subject) => (
-                <Space>
-                    <Button size="small" onClick={() => openSubjectModal(record)}>Sửa</Button>
-                    <Button size="small" danger onClick={() => deleteSubject(record.id)}>Xóa</Button>
-                </Space>
-            ),
-        },
-    ];
-
-    // ----- tien do -----
-    const openSessionModal = (record?: StudySession) => {
-        setEditingSession(record || null);
-        if (record) {
-            sessionForm.setFieldsValue({
-                ...record,
-                date: moment(record.date, 'YYYY-MM-DD HH:mm'),
-            });
-        } else {
-            sessionForm.resetFields();
-        }
-        setIsSessionModalVisible(true);
-    };
-
-    const handleSessionSave = (values: any) => {
-        const sessionData = {
-            ...values,
-            date: values.date.format('YYYY-MM-DD HH:mm'),
-        };
-
-        if (editingSession) {
-            setSessions(sessions.map(s => s.id === editingSession.id ? { ...s, ...sessionData } : s));
-            message.success('Cập nhật tiến độ thành công');
-        } else {
-            setSessions([...sessions, { id: generateId(), ...sessionData }]);
-            message.success('Thêm tiến độ thành công');
-        }
-        setIsSessionModalVisible(false);
-    };
-
-    const deleteSession = (id: string) => {
-        setSessions(sessions.filter(s => s.id !== id));
-        message.success('Đã xóa tiến độ');
-    };
-
-    const sessionColumns = [
-        {
-            title: 'Môn học',
-            dataIndex: 'subjectId',
-            render: (id: string) => subjects.find(s => s.id === id)?.name || 'Không rõ'
-        },
-        { title: 'Thời gian học', dataIndex: 'date' },
-        { title: 'Thời lượng (phút)', dataIndex: 'duration' },
-        { title: 'Nội dung', dataIndex: 'content' },
-        { title: 'Ghi chú', dataIndex: 'note' },
-        {
-            title: 'Hành động', render: (_: any, record: StudySession) => (
-                <Space>
-                    <Button size="small" onClick={() => openSessionModal(record)}>Sửa</Button>
-                    <Button size="small" danger onClick={() => deleteSession(record.id)}>Xóa</Button>
-                </Space>
-            ),
-        },
-    ];
-
-    // ----- muc tieu -----
-    const openGoalModal = (record?: Goal) => {
-        setEditingGoal(record || null);
-        if (record) {
-            goalForm.setFieldsValue({
-                ...record,
-                month: moment(record.month, 'YYYY-MM'),
-            });
-        } else {
-            goalForm.resetFields();
-        }
-        setIsGoalModalVisible(true);
-    };
-
-    const handleGoalSave = (values: any) => {
-        const goalData = {
-            ...values,
-            month: values.month.format('YYYY-MM'),
-        };
-
-        if (editingGoal) {
-            setGoals(goals.map(g => g.id === editingGoal.id ? { ...g, ...goalData } : g));
-            message.success('Cập nhật mục tiêu thành công');
-        } else {
-            setGoals([...goals, { id: generateId(), ...goalData }]);
-            message.success('Thêm mục tiêu thành công');
-        }
-        setIsGoalModalVisible(false);
-    };
-
-    const deleteGoal = (id: string) => {
-        setGoals(goals.filter(g => g.id !== id));
-        message.success('Đã xóa mục tiêu');
-    };
-
-    // tinh toan tien do
-    const getProgress = (goal: Goal) => {
-        const relevantSessions = sessions.filter(session => {
-            const isSameMonth = session.date.startsWith(goal.month);
-            const isRelevantSubject = goal.subjectId === 'all' || session.subjectId === goal.subjectId;
-            return isSameMonth && isRelevantSubject;
-        });
-
-        const totalDuration = relevantSessions.reduce((sum, session) => sum + session.duration, 0);
-        const percentage = Math.min(100, Math.round((totalDuration / goal.targetDuration) * 100));
-        const isCompleted = totalDuration >= goal.targetDuration;
-
-        return { totalDuration, percentage, isCompleted };
-    };
-
-    const goalColumns = [
-        {
-            title: 'Tháng',
-            dataIndex: 'month'
-        },
-        {
-            title: 'Phạm vi',
-            dataIndex: 'subjectId',
-            render: (id: string) => id === 'all' ? 'Tất cả các môn' : (subjects.find(s => s.id === id)?.name || 'Không rõ')
-        },
-        { title: 'Mục tiêu (phút)', dataIndex: 'targetDuration' },
-        {
-            title: 'Tiến độ',
-            render: (_: any, record: Goal) => {
-                const { totalDuration, percentage, isCompleted } = getProgress(record);
+    const renderContent = () => {
+        switch (currentMenu) {
+            case '1':
                 return (
-                    <div style={{ width: 150 }}>
-                        <div>{totalDuration} / {record.targetDuration} phút</div>
-                        <Progress percent={percentage} status={isCompleted ? 'success' : 'active'} />
-                        <span style={{ color: isCompleted ? 'green' : 'orange' }}>
-                            {isCompleted ? 'Hoàn thành' : 'Chưa đạt'}
-                        </span>
-                    </div>
+                    <Space direction="vertical" style={{ width: '100%' }}>
+                        <Form form={formBlock} layout="inline" onFinish={onAddBlock}>
+                            <Form.Item name="name" rules={[{ required: true }]}><Input placeholder="Tên khối KT" /></Form.Item>
+                            <Button htmlType="submit" type="primary">Thêm</Button>
+                        </Form>
+                        <Table dataSource={blocks} rowKey="id" columns={[{ title: 'Tên khối kiến thức', dataIndex: 'name' }]} />
+                    </Space>
                 );
-            }
-        },
-        {
-            title: 'Hành động', render: (_: any, record: Goal) => (
-                <Space>
-                    <Button size="small" onClick={() => openGoalModal(record)}>Sửa</Button>
-                    <Button size="small" danger onClick={() => deleteGoal(record.id)}>Xóa</Button>
-                </Space>
-            ),
-        },
-    ];
+            case '2':
+                return (
+                    <Space direction="vertical" style={{ width: '100%' }}>
+                        <Form form={formSubj} layout="inline" onFinish={onAddSubj}>
+                            <Form.Item name="id" rules={[{ required: true }]}><Input placeholder="Mã môn" /></Form.Item>
+                            <Form.Item name="name" rules={[{ required: true }]}><Input placeholder="Tên môn" /></Form.Item>
+                            <Form.Item name="credits" rules={[{ required: true }]}><InputNumber placeholder="Số TC" min={1} /></Form.Item>
+                            <Button htmlType="submit" type="primary">Thêm</Button>
+                        </Form>
+                        <Table dataSource={subjects} rowKey="id" columns={[{ title: 'Mã môn', dataIndex: 'id' }, { title: 'Tên môn', dataIndex: 'name' }, { title: 'Số TC', dataIndex: 'credits' }]} />
+                    </Space>
+                );
+            case '3':
+                return (
+                    <Space direction="vertical" style={{ width: '100%' }}>
+                        <Form form={formQues} layout="vertical" onFinish={onAddQues}>
+                            <Space align="start">
+                                <Form.Item name="id" rules={[{ required: true }]}><Input placeholder="Mã câu hỏi" /></Form.Item>
+                                <Form.Item name="subjectId" rules={[{ required: true }]}>
+                                    <Select placeholder="Môn học" style={{ width: 140 }}>
+                                        {subjects.map(s => <Select.Option key={s.id} value={s.id}>{s.name}</Select.Option>)}
+                                    </Select>
+                                </Form.Item>
+                                <Form.Item name="blockId" rules={[{ required: true }]}>
+                                    <Select placeholder="Khối KT" style={{ width: 140 }}>
+                                        {blocks.map(b => <Select.Option key={b.id} value={b.id}>{b.name}</Select.Option>)}
+                                    </Select>
+                                </Form.Item>
+                                <Form.Item name="diff" rules={[{ required: true }]}>
+                                    <Select placeholder="Mức độ khó" style={{ width: 140 }}>
+                                        {['Dễ', 'Trung bình', 'Khó', 'Rất khó'].map(d => <Select.Option key={d} value={d}>{d}</Select.Option>)}
+                                    </Select>
+                                </Form.Item>
+                            </Space>
+                            <Form.Item name="content" rules={[{ required: true }]}><Input.TextArea placeholder="Nội dung câu hỏi" /></Form.Item>
+                            <Button htmlType="submit" type="primary">Thêm câu hỏi</Button>
+                        </Form>
+                        <Card size="small" style={{ background: '#fafafa', marginTop: 10 }}>
+                            <Space>
+                                <Select placeholder="Lọc Môn" allowClear style={{ width: 150 }} onChange={setFilterSubj}>
+                                    {subjects.map(s => <Select.Option key={s.id} value={s.id}>{s.name}</Select.Option>)}
+                                </Select>
+                                <Select placeholder="Lọc Khối KT" allowClear style={{ width: 150 }} onChange={setFilterBlock}>
+                                    {blocks.map(b => <Select.Option key={b.id} value={b.id}>{b.name}</Select.Option>)}
+                                </Select>
+                                <Select placeholder="Lọc Mức độ" allowClear style={{ width: 150 }} onChange={setFilterDiff}>
+                                    {['Dễ', 'Trung bình', 'Khó', 'Rất khó'].map(d => <Select.Option key={d} value={d}>{d}</Select.Option>)}
+                                </Select>
+                            </Space>
+                        </Card>
+                        <Table
+                            dataSource={questions.filter(q => (!filterSubj || q.subjectId === filterSubj) && (!filterBlock || q.blockId === filterBlock) && (!filterDiff || q.diff === filterDiff))}
+                            rowKey="id"
+                            columns={[
+                                { title: 'Mã', dataIndex: 'id' },
+                                { title: 'Nội dung', dataIndex: 'content' },
+                                { title: 'Mức độ', dataIndex: 'diff' },
+                                { title: 'Môn', render: (_, r) => subjects.find(s => s.id === r.subjectId)?.name },
+                                { title: 'Khối KT', render: (_, r) => blocks.find(b => b.id === r.blockId)?.name }
+                            ]}
+                        />
+                    </Space>
+                );
+            case '4':
+                return (
+                    <Space direction="vertical" style={{ width: '100%' }}>
+                        <Select placeholder="1. Chọn môn tạo đề" style={{ width: 250, marginBottom: 16 }} onChange={setExamSubjId} value={examSubjId}>
+                            {subjects.map(s => <Select.Option key={s.id} value={s.id}>{s.name}</Select.Option>)}
+                        </Select>
+                        <Form form={formStruct} layout="inline" onFinish={onAddStruct}>
+                            <Form.Item name="blockId" rules={[{ required: true }]}>
+                                <Select placeholder="Khối KT" style={{ width: 140 }}>
+                                    {blocks.map(b => <Select.Option key={b.id} value={b.id}>{b.name}</Select.Option>)}
+                                </Select>
+                            </Form.Item>
+                            <Form.Item name="diff" rules={[{ required: true }]}>
+                                <Select placeholder="Mức độ khó" style={{ width: 140 }}>
+                                    {['Dễ', 'Trung bình', 'Khó', 'Rất khó'].map(d => <Select.Option key={d} value={d}>{d}</Select.Option>)}
+                                </Select>
+                            </Form.Item>
+                            <Form.Item name="count" rules={[{ required: true }]}><InputNumber placeholder="Số lượng" min={1} /></Form.Item>
+                            <Button htmlType="submit">Thêm cấu trúc</Button>
+                        </Form>
+                        <Table
+                            dataSource={structures}
+                            rowKey={(r, i) => i + ''}
+                            pagination={false}
+                            columns={[
+                                { title: 'Khối KT', render: (_, r) => blocks.find(b => b.id === r.blockId)?.name },
+                                { title: 'Mức độ', dataIndex: 'diff' },
+                                { title: 'Số lượng', dataIndex: 'count' }
+                            ]}
+                            style={{ marginTop: 10 }}
+                        />
+                        <Button type="primary" onClick={generateExam} style={{ marginTop: 16, marginBottom: 16 }}>Phát sinh Đề thi</Button>
+                        {exams.map((e, idx) => (
+                            <Card key={idx} type="inner" title={`Đề thi ${idx + 1} - Môn: ${subjects.find(s => s.id === e.subjectId)?.name}`} style={{ marginBottom: 16 }}>
+                                {e.qs.map((q: any, i: number) => (
+                                    <div key={q.id} style={{ marginBottom: 8 }}>
+                                        <b>Câu {i + 1} ({q.diff} - {blocks.find(b => b.id === q.blockId)?.name}):</b> {q.content}
+                                    </div>
+                                ))}
+                            </Card>
+                        ))}
+                    </Space>
+                );
+            default: return null;
+        }
+    };
 
     return (
-        <PageContainer>
-            <div style={{ background: '#fff', padding: 20, border: '1px solid #ccc' }}>
-                <Tabs defaultActiveKey="1">
-                    <TabPane tab="Quản Lý Môn Học" key="1">
-                        <Button onClick={() => openSubjectModal()} style={{ marginBottom: 16 }}>Thêm Môn Học</Button>
-                        <Table dataSource={subjects} columns={subjectColumns} rowKey="id" pagination={false} size="small" />
-                    </TabPane>
-
-                    <TabPane tab="Tiến Độ Học Tập" key="2">
-                        <Button onClick={() => openSessionModal()} style={{ marginBottom: 16 }}>Thêm Tiến Độ</Button>
-                        <Table dataSource={sessions} columns={sessionColumns} rowKey="id" size="small" />
-                    </TabPane>
-
-                    <TabPane tab="Mục Tiêu Hàng Tháng" key="3">
-                        <Button onClick={() => openGoalModal()} style={{ marginBottom: 16 }}>Thêm Mục Tiêu</Button>
-                        <Table dataSource={goals} columns={goalColumns} rowKey="id" size="small" />
-                    </TabPane>
-                </Tabs>
-
-                {/* modal mon hoc */}
-                <Modal title={editingSubject ? "Sửa môn học" : "Thêm môn học"} visible={isSubjectModalVisible} onOk={() => subjectForm.submit()} onCancel={() => setIsSubjectModalVisible(false)} destroyOnClose>
-                    <Form form={subjectForm} onFinish={handleSubjectSave} layout="vertical">
-                        <Form.Item name="name" label="Tên môn học" rules={[{ required: true }]}>
-                            <Input />
-                        </Form.Item>
-                    </Form>
-                </Modal>
-
-                {/* modal tien do */}
-                <Modal title={editingSession ? "Sửa tiến độ" : "Thêm tiến độ"} visible={isSessionModalVisible} onOk={() => sessionForm.submit()} onCancel={() => setIsSessionModalVisible(false)} destroyOnClose>
-                    <Form form={sessionForm} onFinish={handleSessionSave} layout="vertical">
-                        <Form.Item name="subjectId" label="Môn học" rules={[{ required: true }]}>
-                            <Select>
-                                {subjects.map(s => <Option key={s.id} value={s.id}>{s.name}</Option>)}
-                            </Select>
-                        </Form.Item>
-                        <Form.Item name="date" label="Thời gian học" rules={[{ required: true }]}>
-                            <DatePicker showTime format="YYYY-MM-DD HH:mm" style={{ width: '100%' }} />
-                        </Form.Item>
-                        <Form.Item name="duration" label="Thời lượng (phút)" rules={[{ required: true }]}>
-                            <InputNumber min={1} style={{ width: '100%' }} />
-                        </Form.Item>
-                        <Form.Item name="content" label="Nội dung đã học" rules={[{ required: true }]}>
-                            <Input.TextArea />
-                        </Form.Item>
-                        <Form.Item name="note" label="Ghi chú">
-                            <Input />
-                        </Form.Item>
-                    </Form>
-                </Modal>
-
-                {/* modal muc tieu */}
-                <Modal title={editingGoal ? "Sửa mục tiêu" : "Thêm mục tiêu"} visible={isGoalModalVisible} onOk={() => goalForm.submit()} onCancel={() => setIsGoalModalVisible(false)} destroyOnClose>
-                    <Form form={goalForm} onFinish={handleGoalSave} layout="vertical">
-                        <Form.Item name="month" label="Tháng" rules={[{ required: true }]}>
-                            <DatePicker picker="month" format="YYYY-MM" style={{ width: '100%' }} />
-                        </Form.Item>
-                        <Form.Item name="subjectId" label="Phạm vi" rules={[{ required: true }]}>
-                            <Select>
-                                <Option value="all">Tất cả các môn</Option>
-                                {subjects.map(s => <Option key={s.id} value={s.id}>{s.name}</Option>)}
-                            </Select>
-                        </Form.Item>
-                        <Form.Item name="targetDuration" label="Mục tiêu (phút)" rules={[{ required: true }]}>
-                            <InputNumber min={1} style={{ width: '100%' }} />
-                        </Form.Item>
-                    </Form>
-                </Modal>
-            </div>
-        </PageContainer>
+        <Layout style={{ background: '#f0f2f5', minHeight: '100vh' }}>
+            <Header style={{ background: '#fff', padding: 0 }}>
+                <Menu mode="horizontal" selectedKeys={[currentMenu]} onClick={(e) => setCurrentMenu(e.key)}>
+                    <Menu.Item key="1">1. Quản lý Khối kiến thức</Menu.Item>
+                    <Menu.Item key="2">2. Quản lý Môn học</Menu.Item>
+                    <Menu.Item key="3">3. Ngân hàng Câu hỏi</Menu.Item>
+                    <Menu.Item key="4">4. Quản lý Đề thi</Menu.Item>
+                </Menu>
+            </Header>
+            <Content style={{ margin: '24px' }}>
+                <Card>
+                    {renderContent()}
+                </Card>
+            </Content>
+        </Layout>
     );
 };
 
