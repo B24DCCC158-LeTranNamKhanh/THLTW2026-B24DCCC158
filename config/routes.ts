@@ -43,12 +43,12 @@ export default [
 		component: './TodoList',
 	},
 	{
-		path: '/th03',
-		name: 'TH03',
-		icon: 'AppstoreAddOutlined',
-		component: './ungdungcuttoc',
+		path: '/quan-ly-van-bang',
+		name: 'Quản lý văn bằng',
+		icon: 'AuditOutlined',
+		component: './QuanLyVanBang',
 	},
-
+	
 	{
 		path: '/notification',
 		routes: [
