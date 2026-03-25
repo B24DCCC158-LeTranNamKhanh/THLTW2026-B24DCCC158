@@ -1,4 +1,4 @@
-﻿export default [
+export default [
 	{
 		path: '/user',
 		layout: false,
@@ -43,25 +43,11 @@
 		component: './TodoList',
 	},
 	{
-		name: 'TH02',
-		path: '/th02',
-		icon: 'FolderOutlined',
-		routes: [
-			{
-				path: '/th02/bai-1',
-				name: 'Bài 1',
-				icon: 'PlayCircleOutlined',
-				component: './Bai1',
-			},
-			{
-				path: '/th02/bai-2',
-				name: 'Bài 2',
-				icon: 'BookOutlined',
-				component: './Bai2',
-			},
-		],
+		path: '/quan-ly-van-bang',
+		name: 'Quản lý văn bằng',
+		icon: 'AuditOutlined',
+		component: './QuanLyVanBang',
 	},
-
 	
 	{
 		path: '/notification',
