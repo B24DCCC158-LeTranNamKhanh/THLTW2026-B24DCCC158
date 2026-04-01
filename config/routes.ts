@@ -42,12 +42,6 @@ export default [
 		icon: 'OrderedListOutlined',
 		component: './TodoList',
 	},
-	{
-		path: '/quan-ly-van-bang',
-		name: 'Quản lý văn bằng',
-		icon: 'AuditOutlined',
-		component: './QuanLyVanBang',
-	},
 	
 	{
 		path: '/notification',
@@ -70,6 +64,33 @@ export default [
 		],
 		layout: false,
 		hideInMenu: true,
+	},
+	{
+		path: '/quan-ly-clb',
+		name: 'Quản lý Câu lạc bộ',
+		icon: 'TeamOutlined',
+		routes: [
+			{
+				path: '/quan-ly-clb/cau-lac-bo',
+				name: 'Danh sách CLB',
+				component: './QuanLyCauLacBo/CauLacBo',
+			},
+			{
+				path: '/quan-ly-clb/don-dang-ky',
+				name: 'Đơn đăng ký',
+				component: './QuanLyCauLacBo/DonDangKy',
+			},
+			{
+				path: '/quan-ly-clb/thanh-vien',
+				name: 'Thành viên CLB',
+				component: './QuanLyCauLacBo/ThanhVien',
+			},
+			{
+				path: '/quan-ly-clb/bao-cao',
+				name: 'Báo cáo thống kê',
+				component: './QuanLyCauLacBo/BaoCao',
+			},
+		]
 	},
 	{
 		path: '/',
