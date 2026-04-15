@@ -43,10 +43,10 @@ export default [
 		component: './TodoList',
 	},
 	{
-		path: '/travel-app',
-		name: 'Travel App',
-		icon: 'CompassOutlined',
-		component: './TravelApp',
+		path: '/quan-ly-phong-hoc',
+		name: 'Quản lý phòng học',
+		icon: 'AppstoreOutlined',
+		component: './QuanLyPhongHoc',
 	},
 	
 	{
