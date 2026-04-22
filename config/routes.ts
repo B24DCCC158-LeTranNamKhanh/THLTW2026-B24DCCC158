@@ -43,12 +43,41 @@ export default [
 		component: './TodoList',
 	},
 	{
-		path: '/quan-ly-phong-hoc',
-		name: 'Quản lý phòng học',
-		icon: 'AppstoreOutlined',
-		component: './QuanLyPhongHoc',
+		path: '/blog',
+		name: 'Blog',
+		icon: 'ReadOutlined',
+		routes: [
+			{
+				path: '/blog/home',
+				name: 'TrangChu',
+				component: './Blog/TrangChu',
+			},
+			{
+				path: '/blog/manage-articles',
+				name: 'QuanLyBaiViet',
+				component: './Blog/QuanLyBaiViet',
+			},
+			{
+				path: '/blog/manage-tags',
+				name: 'QuanLyThe',
+				component: './Blog/QuanLyThe',
+			},
+			{
+				path: '/blog/about',
+				name: 'GioiThieu',
+				component: './Blog/GioiThieu',
+			},
+			{
+				path: '/blog/article/:id',
+				component: './Blog/ChiTietBaiViet',
+				hideInMenu: true,
+			},
+			{
+				path: '/blog',
+				redirect: '/blog/home',
+			},
+		],
 	},
-	
 	{
 		path: '/notification',
 		routes: [
