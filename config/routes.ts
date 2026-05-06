@@ -43,40 +43,10 @@ export default [
 		component: './TodoList',
 	},
 	{
-		path: '/blog',
-		name: 'Blog',
-		icon: 'ReadOutlined',
-		routes: [
-			{
-				path: '/blog/home',
-				name: 'TrangChu',
-				component: './Blog/TrangChu',
-			},
-			{
-				path: '/blog/manage-articles',
-				name: 'QuanLyBaiViet',
-				component: './Blog/QuanLyBaiViet',
-			},
-			{
-				path: '/blog/manage-tags',
-				name: 'QuanLyThe',
-				component: './Blog/QuanLyThe',
-			},
-			{
-				path: '/blog/about',
-				name: 'GioiThieu',
-				component: './Blog/GioiThieu',
-			},
-			{
-				path: '/blog/article/:id',
-				component: './Blog/ChiTietBaiViet',
-				hideInMenu: true,
-			},
-			{
-				path: '/blog',
-				redirect: '/blog/home',
-			},
-		],
+		path: '/task-tracker',
+		name: 'Theo dõi công việc',
+		icon: 'ProjectOutlined',
+		component: './QuanLyCongViec',
 	},
 	{
 		path: '/notification',
